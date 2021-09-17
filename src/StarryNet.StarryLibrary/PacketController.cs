@@ -8,9 +8,11 @@ namespace StarryNet.StarryLibrary
     {
         public static Dictionary<ushort, Type> packetDictionary = new Dictionary<ushort, Type>();
         public static Dictionary<Type, ushort> typeToPacketIndex = new Dictionary<Type, ushort>();
+        public static Dictionary<string, Type> stringToPacket = new Dictionary<string, Type>();
 
         public static void Initialize(params Assembly[] assemblies)
         {
+            Clear();
             List<Type> packetType = typeof(Packet).GetSubClassList(assemblies);
             packetType.PacketSort();
 
@@ -19,12 +21,14 @@ namespace StarryNet.StarryLibrary
             {
                 packetDictionary.Add(index, type);
                 typeToPacketIndex.Add(type, index);
+                stringToPacket.Add(type.Name, type);
                 index++;
             }
         }
 
         public static void Initialize(Type standardType, params Assembly[] assemblies)
         {
+            Clear();
             List<Type> packetType = standardType.GetSubClassList(assemblies);
             packetType.PacketSort();
 
@@ -33,8 +37,16 @@ namespace StarryNet.StarryLibrary
             {
                 packetDictionary.Add(index, type);
                 typeToPacketIndex.Add(type, index);
+                stringToPacket.Add(type.Name, type);
                 index++;
             }
+        }
+
+        public static void Clear()
+        {
+            packetDictionary.Clear();
+            typeToPacketIndex.Clear();
+            stringToPacket.Clear();
         }
 
         public static ushort GetIndex(Type type)
@@ -44,9 +56,23 @@ namespace StarryNet.StarryLibrary
             return 0;
         }
 
+        public static ushort GetIndex<T>()
+        {
+            if (typeToPacketIndex.TryGetValue(typeof(T), out var id))
+                return id;
+            return 0;
+        }
+
         public static Type GetType(ushort index)
         {
             if (packetDictionary.TryGetValue(index, out var type))
+                return type;
+            return null;
+        }
+
+        public static Type GetType(string typeName)
+        {
+            if (stringToPacket.TryGetValue(typeName, out var type))
                 return type;
             return null;
         }

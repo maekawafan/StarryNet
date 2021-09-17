@@ -4,7 +4,14 @@ namespace StarryNet.StarryData
 {
     public abstract class StarryDataID
     {
-        public readonly uint id;
+        public uint id { get; protected set; }
+
+        public StarryDataID() { }
+
+        protected StarryDataID(uint id)
+        {
+            this.id = id;
+        }
 
         public class Comparer : IEqualityComparer<StarryDataID>
         {
@@ -22,11 +29,19 @@ namespace StarryNet.StarryData
 
     public abstract class StarryDataID<T> : StarryDataID, IStarryDataReference<T>
     {
+        public StarryDataID() : base() { }
+        protected StarryDataID(uint id) : base(id) { }
+
         public abstract T Get();
 
         public bool Exist()
         {
             return Get() != null;
+        }
+
+        public void Set<T2>(T2 value) where T2 : StarryData
+        {
+            this.id = value.id;
         }
     }
 }

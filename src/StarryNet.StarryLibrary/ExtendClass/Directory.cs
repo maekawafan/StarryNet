@@ -20,5 +20,13 @@ namespace StarryNet.StarryLibrary
                 foreach (DirectoryInfo subDirectory in directoryInfo.GetDirectories())
                     subDirectory.Delete(true);
         }
+
+        public static void GenerateFolder(string path)
+        {
+            DirectoryInfo info = new DirectoryInfo(path).Parent;
+
+            if (info.Exists == false)
+                info.Create();
+        }
     }
 }

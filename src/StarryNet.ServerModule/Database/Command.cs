@@ -1,8 +1,8 @@
 ﻿using MySqlConnector;
-
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using StarryNet.StarryLibrary;
 
 namespace StarryNet.ServerModule
 {
@@ -10,9 +10,9 @@ namespace StarryNet.ServerModule
     {
         public DB db { get; private set; }
         public string procedureName { get; private set; }
-        private MySqlCommand command;
-        private Action<MySqlDataReader> successCallback;
-        private Action failCallback;
+        protected MySqlCommand command;
+        protected Action<MySqlDataReader> successCallback;
+        protected Action failCallback;
 
         public override string ToString()
         {
@@ -70,11 +70,11 @@ namespace StarryNet.ServerModule
             return BuildCommand(db, out command, procedureName, values);
         }
 
-        internal static bool BuildCommand(DB.Connection connection, out MySqlCommand command, string procedureName, params object[] values)
+        internal static bool BuildCommand(MySqlConnection connection, out MySqlCommand command, string procedureName, params object[] values)
         {
             command = new MySqlCommand(procedureName)
             {
-                Connection = connection.connection,
+                Connection = connection,
                 CommandType = CommandType.StoredProcedure,
             };
 
@@ -82,7 +82,16 @@ namespace StarryNet.ServerModule
                 return false;
 
             for (int i = 0; i < values.Length;)
-                command.Parameters.AddWithValue(values[i++].ToString(), values[i++]);
+            {
+                if (values[i + 1] is byte[] array)
+                {
+                    var parameter = new MySqlParameter(values[i++].ToString(), MySqlDbType.Blob, array.Length);
+                    parameter.Value = values[i++];
+                    command.Parameters.Add(parameter);
+                }
+                else
+                    command.Parameters.AddWithValue(values[i++].ToString(), values[i++]);
+            }
             return true;
         }
 
@@ -93,7 +102,16 @@ namespace StarryNet.ServerModule
                 return false;
 
             for (int i = 0; i < values.Length;)
-                command.Parameters.AddWithValue(values[i++].ToString(), values[i++]);
+            {
+                if (values[i + 1] is byte[] array)
+                {
+                    var parameter = new MySqlParameter(values[i++].ToString(), MySqlDbType.Blob, array.Length);
+                    parameter.Value = values[i++];
+                    command.Parameters.Add(parameter);
+                }
+                else
+                    command.Parameters.AddWithValue(values[i++].ToString(), values[i++]);
+            }
             return true;
         }
 
@@ -111,17 +129,19 @@ namespace StarryNet.ServerModule
                         await command.ExecuteReaderAsync();
                     else
                     {
-                        MySqlDataReader reader = await command.ExecuteReaderAsync();
-                        using (reader)
+                        using (MySqlDataReader reader = await command.ExecuteReaderAsync())
                         {
-                            if (await reader.ReadAsync())
+                            if (await reader?.ReadAsync())
                                 successCallback(reader);
+                            else
+                                successCallback(null);
                         }
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error($"{e.Message}\n{e.StackTrace}");
                 if (failCallback != null)
                 {
                     try
@@ -140,7 +160,15 @@ namespace StarryNet.ServerModule
 
         public async Task<bool> Execute(MySqlTransaction tx = null)
         {
+            MySqlConnection tempConnection = null;
             command.Transaction = tx;
+            if (tx != null)
+                command.Connection = tx?.Connection;
+            else
+            {
+                tempConnection = db.GetConnection();
+                command.Connection = tempConnection;
+            }
             //if (db == null && db.connection == null && db.connection.State != ConnectionState.Open && command == null)
             //    return false;
             try
@@ -153,17 +181,19 @@ namespace StarryNet.ServerModule
                         await command.ExecuteReaderAsync();
                     else
                     {
-                        MySqlDataReader reader = await command.ExecuteReaderAsync();
-                        using (reader)
+                        using (MySqlDataReader reader = await command.ExecuteReaderAsync())
                         {
-                            if (await reader.ReadAsync())
+                            if (await reader?.ReadAsync())
                                 successCallback(reader);
+                            else
+                                successCallback(null);
                         }
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error($"{e.Message}\n{e.StackTrace}");
                 if (failCallback != null)
                 {
                     try
@@ -177,7 +207,70 @@ namespace StarryNet.ServerModule
                 }
                 return false;
             }
+            finally
+            {
+                if (tempConnection != null)
+                    db.ConnectionClose(tempConnection);
+                command.Connection = null;
+            }
             return true;
+        }
+
+        public async void ExecuteAsync(MySqlTransaction tx = null)
+        {
+            MySqlConnection tempConnection = null;
+            command.Transaction = tx;
+            if (tx != null)
+                command.Connection = tx?.Connection;
+            else
+            {
+                tempConnection = db.GetConnection();
+                command.Connection = tempConnection;
+            }
+            //if (db == null && db.connection == null && db.connection.State != ConnectionState.Open && command == null)
+            //    return false;
+            try
+            {
+                if (IsNotAsync)
+                    command.ExecuteNonQuery();
+                else
+                {
+                    if (successCallback == null)
+                        await command.ExecuteReaderAsync();
+                    else
+                    {
+                        using (MySqlDataReader reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader?.ReadAsync())
+                                successCallback(reader);
+                            else
+                                successCallback(null);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{e.Message}\n{e.StackTrace}");
+                if (failCallback != null)
+                {
+                    try
+                    {
+                        failCallback();
+                    }
+                    catch
+                    {
+                        return;
+                    }
+                }
+                return;
+            }
+            finally
+            {
+                if (tempConnection != null)
+                    db.ConnectionClose(tempConnection);
+                command.Connection = null;
+            }
         }
     }
 }

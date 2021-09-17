@@ -40,6 +40,11 @@
             set { size = value * petaByteUnit; }
         }
 
+        public ByteUnit(long size)
+        {
+            this.size = (ulong)size;
+        }
+
         public ByteUnit(ulong size)
         {
             this.size = size;
@@ -79,16 +84,14 @@
         {
             if (size < 1024UL)
                 return $"{size}Byte";
-            if (size < kiloByteUnit)
-                return $"{KB}KB";
             if (size < megaByteUnit)
-                return $"{MB}MB";
+                return $"{KB}KB";
             if (size < gigaByteUnit)
-                return $"{GB}GB";
+                return $"{MB}MB";
             if (size < teraByteUnit)
-                return $"{TB}TB";
+                return $"{GB}GB";
             if (size < petaByteUnit)
-                return $"{PB}PB";
+                return $"{TB}TB";
             return $"{size}Byte";
         }
 

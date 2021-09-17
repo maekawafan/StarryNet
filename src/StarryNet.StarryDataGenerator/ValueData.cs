@@ -26,13 +26,13 @@ namespace StarryNet.StarryDataGenerator
 
             public ValueData(ClassData classData, DataType dataType, string rawTypeName, string valueName, bool isArray, bool isInstanceValue, string subOption = null)
             {
-                this.classData          = classData;
-                this.dataType           = dataType;
-                this.rawTypeName        = rawTypeName.Replace("[]", string.Empty);
-                this.valueName          = valueName;
-                this.isArray            = isArray;
-                this.isInstanceValue    = isInstanceValue;
-                this.subOption          = subOption;
+                this.classData = classData;
+                this.dataType = dataType;
+                this.rawTypeName = rawTypeName.Replace("[]", string.Empty);
+                this.valueName = valueName;
+                this.isArray = isArray;
+                this.isInstanceValue = isInstanceValue;
+                this.subOption = subOption;
             }
 
             public static bool ValidateData(string typeName, string valueName)
@@ -71,33 +71,40 @@ namespace StarryNet.StarryDataGenerator
                 return DataType.Reference;
             }
 
-            public string GetValueCodeTypeName(bool needEnumReference = false)
+            public string GetValueCodeTypeName(bool forInstance = false)
             {
                 switch (dataType)
                 {
                     case DataType.LocalEnum:
-                    {
-                        if (needEnumReference)
-                            return $"{classData.className}Data.{valueName.ToPascalCase()}{(isArray ? "[]" : string.Empty)}";
-                        else
-                            return valueName.ToPascalCase() + (isArray ? "[]" : string.Empty);
-                    }
+                        {
+                            if (forInstance)
+                                return $"{classData.className}Data.{valueName.ToPascalCase()}{(isArray ? "[]" : string.Empty)}";
+                            else
+                                return valueName.ToPascalCase() + (isArray ? "[]" : string.Empty);
+                        }
 
                     case DataType.GlobalEnum:
                         return subOption + (isArray ? "[]" : string.Empty);
 
                     case DataType.Reference:
-                        return $"IStarryDataReference<{rawTypeName}Data>" + (isArray ? "[]" : string.Empty);
-
+                        {
+                            if (forInstance && isInstanceValue)
+                                return isArray ? $"List<{rawTypeName}Data>" : $"{rawTypeName}Data";
+                            return $"IStarryDataReference<{rawTypeName}Data>" + (isArray ? "[]" : string.Empty);
+                        }
                     case DataType.Vector:
                         return GetVectorCodeName();// + (isArray ? "[]" : string.Empty);
 
                     default:
-                    {
-                        if (codeTypeTable.TryGetValue(dataType, out var codeType))
-                            return codeType + (isArray ? "[]" : string.Empty);
-                        break;
-                    }
+                        {
+                            if (codeTypeTable.TryGetValue(dataType, out var codeType))
+                            {
+                                if (forInstance && isInstanceValue)
+                                    return isArray ? $"List<{codeType}>" : codeType;
+                                return codeType + (isArray ? "[]" : string.Empty);
+                            }
+                            break;
+                        }
                 };
                 return string.Empty;
             }
@@ -163,7 +170,7 @@ namespace StarryNet.StarryDataGenerator
                     return string.Empty;
 
                 string result = string.Empty;
-                result += space + "public enum " + GetValueCodeTypeName() + "\n" + space + "{\n";
+                result += space + "public enum " + GetValueCodeTypeName().Replace("[]", string.Empty) + "\n" + space + "{\n";
                 foreach (string enumString in localEnumValues)
                     result += $"{space}{tabSpace}{enumString},\n";
                 result += space + "};\n\n";

@@ -9,14 +9,41 @@ namespace StarryNet.StarryLibrary
         static float serverFrame = 30.0f;
         static double serverTime = 0.0f;
         static float serverDelay;
+        static bool isClientMode;
 
         static DateTime nextUpdateTime;
 
-        public static DateTime now;
+        public static DateTime _now;
+        public static DateTime now
+        {
+            get
+            {
+                if (isClientMode)
+                    return DateTime.Now;
+                else
+                    return _now;
+            }
+            set
+            {
+                _now = value;
+            }
+        }
 
-        public static void Initialize(float serverFrame)
+        public static DateTime utcNow
+        {
+            get
+            {
+                if (isUsingUTC)
+                    return DateTime.Now;
+                else
+                    return _now.Add(DateTime.UtcNow - DateTime.Now);
+            }
+        }
+
+        public static void Initialize(float serverFrame, bool isClientMode = false)
         {
             ServerTime.serverFrame = serverFrame;
+            ServerTime.isClientMode = isClientMode;
             serverDelay = 1.0f / serverFrame;
         }
 

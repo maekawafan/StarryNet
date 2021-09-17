@@ -29,7 +29,6 @@ namespace StarryNet.ServerModule
         public Func<IAppSession, string, ValueTask> onDisconnect;
         public Action<IAppSession, ServerEvent> onEvent;
 
-        public Func<ushort, Type> typeConvertFunction;
         public IServer server;
 
         public ConcurrentDictionary<string, IAppSession> sessions = new ConcurrentDictionary<string, IAppSession>();
@@ -72,8 +71,8 @@ namespace StarryNet.ServerModule
             .UsePackageHandler(OnPackage)
             .ConfigureLogging((hostCtx, loggingBuilder) =>
             {
-                //loggingBuilder.AddConsole();
-                loggingBuilder.ClearProviders();
+            //loggingBuilder.AddConsole();
+            loggingBuilder.ClearProviders();
             })
             .Build();
 
@@ -92,7 +91,7 @@ namespace StarryNet.ServerModule
         {
             try
             {
-                Type type = typeConvertFunction(package.Key);
+                Type type = PacketController.GetType(package.Key);
                 dynamic pks = MessagePack.MessagePackSerializer.Deserialize(type, package.Body);
                 await packetStorage.AddPacket((appSession, pks));
             }

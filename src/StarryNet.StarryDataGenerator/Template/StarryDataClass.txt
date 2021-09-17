@@ -8,41 +8,53 @@ using BigInteger = System.Numerics.BigInteger;
 
 namespace StarryNet.StarryData
 {
-    public class [DataName]Data : StarryData
+    public class [DataName]Data : NeraData
     {
-    	[LocalEnums]
-    	[Values]
-    
+	    [LocalEnums]
+	    [Values]
+
         public override void Regist()
         {
             DataController.[LowerDataName]DataIDTable.Add(id, this);
             DataController.[LowerDataName]DataNameTable.Add(name, this);
+            DataController.[LowerDataName]DataList.Add(this);
         }
-    
+
         public static [DataName]Data Get(uint id)
         {
             if (DataController.[LowerDataName]DataIDTable.TryGetValue(id, out var data))
                 return data;
             return null;
         }
-    
+
         public static [DataName]Data Get(string name)
         {
             if (DataController.[LowerDataName]DataNameTable.TryGetValue(name, out var data))
                 return data;
             return null;
         }
-    
+
         public static IDictionary GetDictionary()
         {
             return DataController.[LowerDataName]DataIDTable;
         }
-    
+
+        public static IEnumerable<[DataName]Data> GetAllDatas()
+        {
+            foreach (var data in DataController.[LowerDataName]DataIDTable.Values)
+                yield return data;
+        }
+
+        public static List<[DataName]Data> GetAllDataList()
+        {
+            return DataController.[LowerDataName]DataList;
+        }
+
         public static Type GetNameReferenceType()
         {
             return typeof([DataName]DataName);
         }
-    
+
         public static Type GetIDReferenceType()
         {
             return typeof([DataName]DataID);
@@ -52,10 +64,31 @@ namespace StarryNet.StarryData
         {
             DataController.[LowerDataName]DataIDTable.Clear();
             DataController.[LowerDataName]DataNameTable.Clear();
+            DataController.[LowerDataName]DataList.Clear();
+        }
+
+        public static [DataName]Data GetInstanceValue(INeraDataReference<[DataName]Data> data)
+        {
+            if (data == null)
+                return null;
+            return data.Get();
+        }
+
+        public static List<[DataName]Data> GetInstanceValue(INeraDataReference<[DataName]Data>[] data)
+        {
+            List<[DataName]Data> result = new List<[DataName]Data>();
+            if (data == null)
+                return result;
+
+            foreach (var value in data)
+            {
+                result.Add(value.Get());
+            }
+            return result;
         }
     }
-    
-    public partial class [DataName]DataID : StarryDataID<[DataName]Data>
+
+    public partial class [DataName]DataID : NeraDataID<[DataName]Data>
     {
         public override [DataName]Data Get()
         {
@@ -63,9 +96,14 @@ namespace StarryNet.StarryData
                 return result;
             return null;
         }
+
+        public [DataName]DataID() : base() { }
+        public [DataName]DataID(uint id) : base(id) { }
+
+        public static implicit operator long([DataName]DataID dataId) => (long)dataId.id;
     }
-    
-    public partial class [DataName]DataName : StarryDataName<[DataName]Data>
+
+    public partial class [DataName]DataName : NeraDataName<[DataName]Data>
     {
         public override [DataName]Data Get()
         {
@@ -73,9 +111,12 @@ namespace StarryNet.StarryData
                 return result;
             return null;
         }
+
+        public [DataName]DataName() : base() { }
+        public [DataName]DataName(string name) : base(name) { }
     }
 
-    public partial class [DataName]Instance : StarryInstance<[DataName]Data>
+    public partial class [DataName]Instance : NeraInstance<[DataName]Data>
     {
         [InstanceValues]
 
@@ -85,12 +126,31 @@ namespace StarryNet.StarryData
             [InstanceInitialize]
         }
 
+        static [DataName]Instance()
+        {
+
+        }
+
         public [DataName]Instance(uint id) : this([DataName]Data.Get(id)) { }
         public [DataName]Instance(string name) : this([DataName]Data.Get(name)) { }
     }
-    
+
+    public class [DataName]InstanceComparer : IEqualityComparer<[DataName]Instance>
+    {
+        public bool Equals([DataName]Instance x, [DataName]Instance y)
+        {
+            return x.id == y.id;
+        }
+
+        public int GetHashCode([DataName]Instance obj)
+        {
+            return unchecked((int)obj.id);
+        }
+    }
+
     public static partial class DataController
     {
+        public static List<[DataName]Data> [LowerDataName]DataList = new List<[DataName]Data>();
         public static Dictionary<uint, [DataName]Data> [LowerDataName]DataIDTable = new Dictionary<uint, [DataName]Data>();
         public static Dictionary<string, [DataName]Data> [LowerDataName]DataNameTable = new Dictionary<string, [DataName]Data>();
     }
@@ -99,6 +159,12 @@ namespace StarryNet.StarryData
     {
         public void Serialize(ref MessagePackWriter writer, [DataName]Data value, global::MessagePack.MessagePackSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteArrayHeader(0);
+                return;
+            }
+
             writer.WriteArrayHeader(1);
             writer.WriteUInt32(value.id);
         }
@@ -111,6 +177,10 @@ namespace StarryNet.StarryData
             }
             var length = reader.ReadArrayHeader();
             var __id__ = default(uint);
+
+            if (length == 0)
+                return null;
+
             for (int i = 0; i < length; i++)
             {
                 var key = i;
@@ -126,6 +196,105 @@ namespace StarryNet.StarryData
             }
 
             return [DataName]Data.Get(__id__);
+        }
+    }
+
+    public sealed class [DataName]InstanceFormatter : global::MessagePack.Formatters.IMessagePackFormatter<[DataName]Instance>
+    {
+        public void Serialize(ref MessagePackWriter writer, [DataName]Instance value, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            if (value == null)
+            {
+                writer.WriteArrayHeader(0);
+                return;
+            }
+
+            writer.WriteArrayHeader([InstanceValuesCount]);
+            writer.WriteUInt32(value.id);
+            [InstanceSerialize]
+        }
+
+        public [DataName]Instance Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            if (reader.IsNil)
+            {
+                throw new InvalidOperationException("typecode is null, struct not supported");
+            }
+            var length = reader.ReadArrayHeader();
+            var __id__ = default(uint);
+
+            if (length == 0)
+                return null;
+
+            [InstanceDeserializeInitialize]
+
+            for (int i = 0; i < length; i++)
+            {
+                var key = i;
+                switch (key)
+                {
+                    case 0:
+                        __id__ = reader.ReadUInt32();
+                        break;
+                    [InstanceDeserialize]
+                    default:
+                        reader.Skip();
+                        break;
+                }
+            }
+
+            [DataName]Instance result = new [DataName]Instance(__id__);
+            [InstanceDeserializeSet]
+
+            return result;
+        }
+    }
+
+    public static partial class [DataName]Ex
+    {
+        public static void Write(this ref MessagePackWriter writer, [DataName]Data value)
+        {
+            writer.Write(value.id);
+        }
+
+        public static void Write(this ref MessagePackWriter writer, List<[DataName]Data> value)
+        {
+            if (value == null)
+            {
+                writer.Write(0);
+                return;
+            }
+
+            writer.Write(value.Count);
+            foreach(var atom in value)
+                writer.Write(atom);
+        }
+
+        public static void Write(this ref MessagePackWriter writer, INeraDataReference<[DataName]Data> value)
+        {
+            writer.Write(value.Get().id);
+        }
+
+        public static void Read(this ref MessagePackReader reader, out [DataName]Data value)
+        {
+            value = [DataName]Data.Get(reader.ReadUInt16());
+        }
+
+        public static void Read(this ref MessagePackReader reader, out List<[DataName]Data> value)
+        {
+            int length = reader.ReadInt32();
+            value = new List<[DataName]Data>();
+            for (int i = 0; i < length; i++)
+            {
+                [DataName]Data atom;
+                reader.Read(out atom);
+                value.Add(atom);
+            }
+        }
+
+        public static void Read(this ref MessagePackReader reader, out INeraDataReference<[DataName]Data> value)
+        {
+            value = new [DataName]DataID(reader.ReadUInt16());
         }
     }
 }

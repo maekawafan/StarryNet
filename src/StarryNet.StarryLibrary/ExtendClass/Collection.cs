@@ -99,5 +99,41 @@ namespace StarryNet.StarryLibrary
                     result++;
             return result;
         }
+
+        /// <summary>
+        /// 컬렉션에 특정 조건을 만족하는 아이템을 리턴합니다.
+        /// </summary>
+        /// <param name="collection">검사 대상 컬렉션</param>
+        /// <param name="condition">특정 조건</param>
+        /// <returns></returns>
+        static public T Find<T>(this ICollection<T> collection, Predicate<T> condition) where T : class
+        {
+            foreach (var item in collection)
+                if (condition(item))
+                    return item;
+            return null;
+        }
+
+        /// <summary>
+        /// 리스트의 랜덤한 값 하나를 리턴합니다.
+        /// </summary>
+        /// <param name="list">랜덤한 값을 가져올 리스트</param>
+        static public T RandomPick<T>(this IList<T> list)
+        {
+            if (list.IsEmpty())
+                return default(T);
+            return list[Random.NextInt(list.Count - 1)];
+        }
+
+        /// <summary>
+        /// 배열의 랜덤한 값 하나를 리턴합니다.
+        /// </summary>
+        /// <param name="array">랜덤한 값을 가져올 배열</param>
+        static public T RandomPick<T>(this T[] array)
+        {
+            if (array.IsEmpty())
+                return default(T);
+            return array[Random.NextInt(array.Length - 1)];
+        }
     }
 }
