@@ -14,16 +14,8 @@ namespace StarryNet.ServerModule
         public readonly string id;
         public readonly string password;
         public readonly string dbName;
-        public List<Connection> connectionList = new List<Connection>();
 
-        public int usableConnectionCount
-        {
-            get { return connectionList.FindAll((connection) => { return connection.usable; }).Count; }
-        }
-        public int unusableConnectionCount
-        {
-            get { return connectionList.FindAll((connection) => { return !connection.usable; }).Count; }
-        }
+        public HashSet<MySqlConnection> connections = new HashSet<MySqlConnection>();
 
         public DB(string ip, int port, string id, string password, string dbName)
         {
@@ -33,6 +25,17 @@ namespace StarryNet.ServerModule
             this.password = password;
             this.dbName = dbName;
             string connectKey = MakeConnectKey();
+        }
+
+        public int GetConnectionCount()
+        {
+            return connections.Count;
+        }
+
+        public void ConnectionClose(MySqlConnection connection)
+        {
+            connection.Close();
+            connections.Remove(connection);
         }
 
         public async void ConnectionTest()
@@ -51,39 +54,24 @@ namespace StarryNet.ServerModule
                 Log.Info($"DB[{dbName}] Connect Success!");
             else
                 Log.Error($"DB[{dbName}] Connect Fail!");
-            connection.Close();
+            ConnectionClose(connection);
         }
 
         public string MakeConnectKey()
         {
-            return $"server={ip};port={port};uid={id};pwd={password};database={dbName};charset=utf8";
+            return $"server={ip};port={port};uid={id};pwd={password};database={dbName};charset=utf8;ConvertZeroDateTime=True";
         }
 
-        public int GetConnectionCount()
+        public MySqlConnection GetConnection()
         {
-            return connectionList.Count;
-        }
-
-        private Connection GetConnection()
-        {
-            foreach (Connection connection in connectionList)
-            {
-                if (connection.usable)
-                {
-                    connection.usable = false;
-                    connection.connection.Open();
-                    return connection;
-                }
-            }
-            Connection result = new Connection(new MySqlConnection(MakeConnectKey()));
-            result.usable = false;
-            result.connection.Open();
-            if (result.connection.State != ConnectionState.Open)
+            MySqlConnection result = new MySqlConnection(MakeConnectKey());
+            result.Open();
+            if (result.State != ConnectionState.Open)
             {
                 Log.Error($"DB Connection Fail server={ip} port={port} database={dbName}");
                 return null;
             }
-            connectionList.Add(result);
+            connections.Add(result);
             return result;
         }
 
@@ -91,53 +79,39 @@ namespace StarryNet.ServerModule
         {
             return new MySqlCommand(procedureName)
             {
-                Connection = GetConnection().connection,
                 CommandType = CommandType.StoredProcedure,
             };
         }
 
         public void CloseAllConnection()
         {
-            for (int i = 0; i < connectionList.Count; i++)
-            {
-                if (connectionList[i].usable)
-                {
-                    connectionList[i].connection.Close();
-                    connectionList.RemoveAt(i);
-                    i--;
-                }
-            }
+            foreach (var connection in connections)
+                connection.Clone();
+            connections.Clear();
         }
 
-        public int ClearIdleConnection(double surplusTime = 60.0f)
+        public async Task<bool> RunTransaction(Func<MySqlTransaction, Task<bool>> action)
         {
-            int clearCount = 0;
-            for (int i = 0; i < connectionList.Count; i++)
+            MySqlConnection connection = GetConnection();
+            bool result = false;
+            try
             {
-                Connection connection = connectionList[i];
-                if (connection.usable && connection.lastUseTime.AddSeconds(surplusTime) < DateTime.UtcNow)
+                using (MySqlTransaction tx = connection.BeginTransaction())
                 {
-                    connection.connection.Close();
-                    connectionList.RemoveAt(i);
-                    i--;
-                    clearCount++;
+                    result = await action(tx);
                 }
             }
-            return clearCount;
-        }
-
-        public async Task RunTransaction(Func<Task<bool>> action)
-        {
-            Connection connection = GetConnection();
-            await connection.BeginTransaction();
-            await action();
-            connection.EndTransaction();
+            finally
+            {
+                ConnectionClose(connection);
+            }
+            return result;
         }
 
         public void RunProcedure(string procedureName, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -146,7 +120,6 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
                 command.ExecuteNonQuery();
             }
             catch (Exception e)
@@ -155,14 +128,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public void RunProcedure(string procedureName, Action<MySqlDataReader> successCallback, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -171,21 +144,12 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
-                MySqlDataReader reader = command.ExecuteReader();
-                using (reader)
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
-                    if (reader.Read())
-                    {
-                        try
-                        {
-                            successCallback(reader);
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(e.Message);
-                        }
-                    }
+                    if (reader?.Read() ?? false)
+                        successCallback(reader);
+                    else
+                        successCallback(null);
                 }
             }
             catch (Exception e)
@@ -194,14 +158,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public void RunProcedure(string procedureName, Action failCallback, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -210,12 +174,7 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
-                MySqlDataReader reader = command.ExecuteReader();
-                using (reader)
-                {
-                    command.ExecuteNonQuery();
-                }
+                command.ExecuteNonQuery();
             }
             catch
             {
@@ -223,14 +182,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public void RunProcedure(string procedureName, Action<MySqlDataReader> successCallback, Action failCallback, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -239,21 +198,12 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
-                MySqlDataReader reader = command.ExecuteReader();
-                using (reader)
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
-                    if (reader.Read())
-                    {
-                        try
-                        {
-                            successCallback(reader);
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(e.Message);
-                        }
-                    }
+                    if (reader?.Read() ?? false)
+                        successCallback(reader);
+                    else
+                        successCallback(null);
                 }
             }
             catch (Exception e)
@@ -263,14 +213,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public async Task RunProcedureAsync(string procedureName, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -279,7 +229,6 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
                 await command.ExecuteNonQueryAsync();
             }
             catch (Exception e)
@@ -288,14 +237,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public async Task RunProcedureAsync(string procedureName, Action<MySqlDataReader> successCallback, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -304,21 +253,12 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
-                MySqlDataReader reader = await command.ExecuteReaderAsync();
-                using (reader)
+                using (MySqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    if (reader.Read())
-                    {
-                        try
-                        {
-                            successCallback(reader);
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(e.Message);
-                        }
-                    }
+                    if (await reader?.ReadAsync())
+                        successCallback(reader);
+                    else
+                        successCallback(null);
                 }
             }
             catch (Exception e)
@@ -327,14 +267,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public async Task RunProcedureAsync(string procedureName, Action failCallback, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -343,12 +283,7 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
-                MySqlDataReader reader = await command.ExecuteReaderAsync();
-                using (reader)
-                {
-                    await command.ExecuteNonQueryAsync();
-                }
+                await command.ExecuteNonQueryAsync();
             }
             catch
             {
@@ -356,14 +291,14 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
+                ConnectionClose(connection);
             }
         }
 
         public async Task RunProcedureAsync(string procedureName, Action<MySqlDataReader> successCallback, Action failCallback, params object[] values)
         {
             MySqlCommand command;
-            DB.Connection connection = GetConnection();
+            MySqlConnection connection = GetConnection();
             if (Command.BuildCommand(connection, out command, procedureName, values) == false)
             {
                 Log.Error($"프로시저[{procedureName}] 실행 실패 - 매개변수 오류");
@@ -372,21 +307,12 @@ namespace StarryNet.ServerModule
 
             try
             {
-                connection.Lock();
-                MySqlDataReader reader = await command.ExecuteReaderAsync();
-                using (reader)
+                using (MySqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    if (await reader.ReadAsync())
-                    {
-                        try
-                        {
-                            successCallback(reader);
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(e.Message);
-                        }
-                    }
+                    if (await reader?.ReadAsync())
+                        successCallback(reader);
+                    else
+                        successCallback(null);
                 }
             }
             catch (Exception e)
@@ -396,83 +322,7 @@ namespace StarryNet.ServerModule
             }
             finally
             {
-                connection.Unlock();
-            }
-        }
-
-
-        ~DB()
-        {
-            foreach (Connection conn in connectionList)
-                conn.connection.Close();
-            //if (connection != null)
-            //    connection.Close();
-        }
-
-        public class Connection
-        {
-            public MySqlConnection connection;
-            public bool usable;
-            public DateTime lastUseTime = DateTime.MinValue;
-
-            public Connection(MySqlConnection connection)
-            {
-                this.connection = connection;
-                usable = true;
-            }
-
-            public async Task<MySqlTransaction> BeginTransaction()
-            {
-                if (connection == null)
-                {
-                    Log.Error("null인 커넥션의 트랜잭션을 시작했습니다.");
-                    return null;
-                }
-                usable = false;
-                return await connection.BeginTransactionAsync();
-            }
-
-            public void EndTransaction()
-            {
-                if (connection == null)
-                {
-                    Log.Error("null인 커넥션의 트랜잭션을 종료했습니다.");
-                    return;
-                }
-                usable = true;
-                lastUseTime = DateTime.UtcNow;
-            }
-
-            public void Lock()
-            {
-                if (connection == null)
-                {
-                    Log.Error("null인 커넥션에 대해 Lock()를 호출했습니다.");
-                    return;
-                }
-                usable = false;
-            }
-
-            public void Unlock()
-            {
-                if (connection == null)
-                {
-                    Log.Error("null인 커넥션에 대해 Unlock()를 호출했습니다.");
-                    return;
-                }
-                connection.Close();
-                usable = true;
-                lastUseTime = DateTime.UtcNow;
-            }
-
-            public void Erase()
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection = null;
-                }
-                usable = false;
+                ConnectionClose(connection);
             }
         }
     }

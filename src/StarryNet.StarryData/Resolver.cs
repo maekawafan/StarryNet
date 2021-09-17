@@ -3,6 +3,7 @@ using MessagePack.Formatters;
 
 using System;
 using System.Collections.Generic;
+using StarryNet.StarryLibrary;
 
 namespace StarryNet.StarryData
 {
@@ -37,6 +38,9 @@ namespace StarryNet.StarryData
         { typeof(ItemData), new ItemDataFormatter() },
         { typeof(ItemData[]), new ArrayFormatter<ItemData>() },
         { typeof(List<ItemData>), new ListFormatter<ItemData>() },
+        { typeof(ItemInstance), new ItemInstanceFormatter() },
+        { typeof(ItemInstance[]), new ArrayFormatter<ItemInstance>() },
+        { typeof(List<ItemInstance>), new ListFormatter<ItemInstance>() },
     };
 
         internal static object GetFormatter(Type t)

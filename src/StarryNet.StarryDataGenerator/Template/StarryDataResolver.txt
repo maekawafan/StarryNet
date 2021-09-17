@@ -3,6 +3,7 @@ using MessagePack.Formatters;
 
 using System;
 using System.Collections.Generic;
+using StarryNet.StarryLibrary;
 
 namespace StarryNet.StarryData
 {

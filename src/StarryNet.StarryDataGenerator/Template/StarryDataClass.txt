@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MessagePack;
+using StarryNet.StarryLibrary;
 
 using BigInteger = System.Numerics.BigInteger;
 
 namespace StarryNet.StarryData
 {
-    public class [DataName]Data : NeraData
+    public class [DataName]Data : StarryData
     {
 	    [LocalEnums]
 	    [Values]
@@ -67,14 +68,14 @@ namespace StarryNet.StarryData
             DataController.[LowerDataName]DataList.Clear();
         }
 
-        public static [DataName]Data GetInstanceValue(INeraDataReference<[DataName]Data> data)
+        public static [DataName]Data GetInstanceValue(IStarryDataReference<[DataName]Data> data)
         {
             if (data == null)
                 return null;
             return data.Get();
         }
 
-        public static List<[DataName]Data> GetInstanceValue(INeraDataReference<[DataName]Data>[] data)
+        public static List<[DataName]Data> GetInstanceValue(IStarryDataReference<[DataName]Data>[] data)
         {
             List<[DataName]Data> result = new List<[DataName]Data>();
             if (data == null)
@@ -88,7 +89,7 @@ namespace StarryNet.StarryData
         }
     }
 
-    public partial class [DataName]DataID : NeraDataID<[DataName]Data>
+    public partial class [DataName]DataID : StarryDataID<[DataName]Data>
     {
         public override [DataName]Data Get()
         {
@@ -103,7 +104,7 @@ namespace StarryNet.StarryData
         public static implicit operator long([DataName]DataID dataId) => (long)dataId.id;
     }
 
-    public partial class [DataName]DataName : NeraDataName<[DataName]Data>
+    public partial class [DataName]DataName : StarryDataName<[DataName]Data>
     {
         public override [DataName]Data Get()
         {
@@ -116,7 +117,7 @@ namespace StarryNet.StarryData
         public [DataName]DataName(string name) : base(name) { }
     }
 
-    public partial class [DataName]Instance : NeraInstance<[DataName]Data>
+    public partial class [DataName]Instance : StarryInstance<[DataName]Data>
     {
         [InstanceValues]
 
@@ -270,7 +271,7 @@ namespace StarryNet.StarryData
                 writer.Write(atom);
         }
 
-        public static void Write(this ref MessagePackWriter writer, INeraDataReference<[DataName]Data> value)
+        public static void Write(this ref MessagePackWriter writer, IStarryDataReference<[DataName]Data> value)
         {
             writer.Write(value.Get().id);
         }
@@ -292,7 +293,7 @@ namespace StarryNet.StarryData
             }
         }
 
-        public static void Read(this ref MessagePackReader reader, out INeraDataReference<[DataName]Data> value)
+        public static void Read(this ref MessagePackReader reader, out IStarryDataReference<[DataName]Data> value)
         {
             value = new [DataName]DataID(reader.ReadUInt16());
         }

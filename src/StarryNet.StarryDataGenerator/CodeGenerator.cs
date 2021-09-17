@@ -8,8 +8,8 @@ namespace StarryNet.StarryDataGenerator
     {
         public static void CodeGenerate(string exportPath, string templatePath)
         {
-            string dataClassTemplate = File.ReadAllText(@$"{templatePath}NeraDataClass.txt");
-            string resolverTemplate = File.ReadAllText(@$"{templatePath}NeraDataResolver.txt");
+            string dataClassTemplate = File.ReadAllText(@$"{templatePath}StarryDataClass.txt");
+            string resolverTemplate = File.ReadAllText(@$"{templatePath}StarryDataResolver.txt");
 
             DirectoryInfo directory = new DirectoryInfo(exportPath);
             directory.DeleteAllFiles();
