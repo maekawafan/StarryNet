@@ -1,0 +1,131 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using MessagePack;
+
+using BigInteger = System.Numerics.BigInteger;
+
+namespace StarryNet.StarryData
+{
+    public class [DataName]Data : StarryData
+    {
+    	[LocalEnums]
+    	[Values]
+    
+        public override void Regist()
+        {
+            DataController.[LowerDataName]DataIDTable.Add(id, this);
+            DataController.[LowerDataName]DataNameTable.Add(name, this);
+        }
+    
+        public static [DataName]Data Get(uint id)
+        {
+            if (DataController.[LowerDataName]DataIDTable.TryGetValue(id, out var data))
+                return data;
+            return null;
+        }
+    
+        public static [DataName]Data Get(string name)
+        {
+            if (DataController.[LowerDataName]DataNameTable.TryGetValue(name, out var data))
+                return data;
+            return null;
+        }
+    
+        public static IDictionary GetDictionary()
+        {
+            return DataController.[LowerDataName]DataIDTable;
+        }
+    
+        public static Type GetNameReferenceType()
+        {
+            return typeof([DataName]DataName);
+        }
+    
+        public static Type GetIDReferenceType()
+        {
+            return typeof([DataName]DataID);
+        }
+
+        public static void UnloadAll()
+        {
+            DataController.[LowerDataName]DataIDTable.Clear();
+            DataController.[LowerDataName]DataNameTable.Clear();
+        }
+    }
+    
+    public partial class [DataName]DataID : StarryDataID<[DataName]Data>
+    {
+        public override [DataName]Data Get()
+        {
+            if (DataController.[LowerDataName]DataIDTable.TryGetValue(id, out var result))
+                return result;
+            return null;
+        }
+    }
+    
+    public partial class [DataName]DataName : StarryDataName<[DataName]Data>
+    {
+        public override [DataName]Data Get()
+        {
+            if (DataController.[LowerDataName]DataNameTable.TryGetValue(name, out var result))
+                return result;
+            return null;
+        }
+    }
+
+    public partial class [DataName]Instance : StarryInstance<[DataName]Data>
+    {
+        [InstanceValues]
+
+        public [DataName]Instance([DataName]Data data)
+        {
+            this.data = data;
+            [InstanceInitialize]
+        }
+
+        public [DataName]Instance(uint id) : this([DataName]Data.Get(id)) { }
+        public [DataName]Instance(string name) : this([DataName]Data.Get(name)) { }
+    }
+    
+    public static partial class DataController
+    {
+        public static Dictionary<uint, [DataName]Data> [LowerDataName]DataIDTable = new Dictionary<uint, [DataName]Data>();
+        public static Dictionary<string, [DataName]Data> [LowerDataName]DataNameTable = new Dictionary<string, [DataName]Data>();
+    }
+
+    public sealed class [DataName]DataFormatter : global::MessagePack.Formatters.IMessagePackFormatter<[DataName]Data>
+    {
+        public void Serialize(ref MessagePackWriter writer, [DataName]Data value, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            writer.WriteArrayHeader(1);
+            writer.WriteUInt32(value.id);
+        }
+
+        public [DataName]Data Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            if (reader.IsNil)
+            {
+                throw new InvalidOperationException("typecode is null, struct not supported");
+            }
+            var length = reader.ReadArrayHeader();
+            var __id__ = default(uint);
+            for (int i = 0; i < length; i++)
+            {
+                var key = i;
+                switch (key)
+                {
+                    case 0:
+                        __id__ = reader.ReadUInt32();
+                        break;
+                    default:
+                        reader.Skip();
+                        break;
+                }
+            }
+
+            return [DataName]Data.Get(__id__);
+        }
+    }
+}

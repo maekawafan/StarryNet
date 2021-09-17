@@ -1,0 +1,86 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarryLibrary", "src\StarryNet.StarryLibrary\StarryLibrary.csproj", "{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerModule", "src\StarryNet.ServerModule\ServerModule.csproj", "{2C2D72D1-A517-4CF7-A806-66826BF93B66}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnityModule", "src\StarryNet.UnityModule\UnityModule.csproj", "{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarryData", "src\StarryNet.StarryData\StarryData.csproj", "{994C68D6-6E12-406C-83B0-C38223FD6B9E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8} = {B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarryDataGenerator", "src\StarryNet.StarryDataGenerator\StarryDataGenerator.csproj", "{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetworkModule", "NetworkModule", "{37B6F2F4-2574-4BBC-B463-0FE31DC7666A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataModule", "DataModule", "{304033A9-1519-4DC5-A40A-78178BB32E88}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{9D712ABE-3E60-4BC7-A801-B71394C4AD94}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{E342FC20-89B5-4985-B971-D33EC497460B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleServer", "SampleServer\SampleServer.csproj", "{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}.Debug|x64.ActiveCfg = Debug|x64
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}.Debug|x64.Build.0 = Debug|x64
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}.Release|Any CPU.ActiveCfg = Release|x64
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}.Release|x64.ActiveCfg = Release|x64
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6}.Release|x64.Build.0 = Release|x64
+		{2C2D72D1-A517-4CF7-A806-66826BF93B66}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{2C2D72D1-A517-4CF7-A806-66826BF93B66}.Debug|x64.ActiveCfg = Debug|x64
+		{2C2D72D1-A517-4CF7-A806-66826BF93B66}.Debug|x64.Build.0 = Debug|x64
+		{2C2D72D1-A517-4CF7-A806-66826BF93B66}.Release|Any CPU.ActiveCfg = Release|x64
+		{2C2D72D1-A517-4CF7-A806-66826BF93B66}.Release|x64.ActiveCfg = Release|x64
+		{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7}.Debug|x64.ActiveCfg = Debug|x64
+		{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7}.Debug|x64.Build.0 = Debug|x64
+		{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7}.Release|Any CPU.ActiveCfg = Release|x64
+		{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7}.Release|x64.ActiveCfg = Release|x64
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Debug|x64.ActiveCfg = Debug|x64
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Debug|x64.Build.0 = Debug|x64
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Release|x64.ActiveCfg = Release|Any CPU
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E}.Release|x64.Build.0 = Release|Any CPU
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}.Debug|x64.ActiveCfg = Debug|x64
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}.Debug|x64.Build.0 = Debug|x64
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}.Release|Any CPU.ActiveCfg = Release|x64
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8}.Release|x64.ActiveCfg = Release|x64
+		{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188}.Debug|x64.ActiveCfg = Debug|x64
+		{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188}.Debug|x64.Build.0 = Debug|x64
+		{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188}.Release|Any CPU.ActiveCfg = Release|x64
+		{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188}.Release|x64.ActiveCfg = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{17D70465-35EC-4B56-A356-6C7BD7A1AEA6} = {9D712ABE-3E60-4BC7-A801-B71394C4AD94}
+		{2C2D72D1-A517-4CF7-A806-66826BF93B66} = {37B6F2F4-2574-4BBC-B463-0FE31DC7666A}
+		{FA6DAAD7-C0A6-40E3-B01F-F9CB554EF4B7} = {37B6F2F4-2574-4BBC-B463-0FE31DC7666A}
+		{994C68D6-6E12-406C-83B0-C38223FD6B9E} = {304033A9-1519-4DC5-A40A-78178BB32E88}
+		{B14A24E5-311B-45D0-B9CD-AC03CA3BFAC8} = {304033A9-1519-4DC5-A40A-78178BB32E88}
+		{F7FCCDD4-A6B3-4F15-AEC6-0D6344A02188} = {E342FC20-89B5-4985-B971-D33EC497460B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {170E1026-4840-408C-A6EB-11B7C0CB4A0D}
+	EndGlobalSection
+EndGlobal

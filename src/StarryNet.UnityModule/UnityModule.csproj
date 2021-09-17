@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DocumentationFile>A:\Repos\StarryNet\src\StarryNet.UnityModule\UnityModule.xml</DocumentationFile>
+    <OutputPath>../../bin/</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <NoWarn>1591;1701;1702</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SuperSocket.ClientEngine" Version="0.10.0" />
+    <PackageReference Include="SuperSocket.ProtoBase" Version="1.7.0.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StarryNet.StarryLibrary\StarryLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\lib\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

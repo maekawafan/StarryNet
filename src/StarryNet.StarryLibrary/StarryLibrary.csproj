@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <OutputPath>../../bin/</OutputPath>
+    <DocumentationFile>../../bin/\CSharpLibrary.xml</DocumentationFile>
+    <NoWarn>1591;1701;1702;</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutputPath>../../bin/</OutputPath>
+    <DocumentationFile>../../bin/\CSharpLibrary.xml</DocumentationFile>
+    <NoWarn>1591;1701;1702;</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" Version="2.2.85" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\lib\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
