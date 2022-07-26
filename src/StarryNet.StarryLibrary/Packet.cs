@@ -5,3 +5,9 @@ public abstract class Packet
 {
 
 }
+
+[MessagePackObject]
+public abstract class FastPacket : Packet
+{
+
+}

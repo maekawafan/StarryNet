@@ -4,8 +4,10 @@ using StarryNet.StarryLibrary;
 
 namespace StarryNet.ServerModule
 {
-    public static class Schedule
+    public class Schedule
     {
+        public static Schedule globalSchedule = new Schedule();
+
         internal struct Data
         {
             private DateTime createTime;
@@ -16,7 +18,7 @@ namespace StarryNet.ServerModule
 
             internal Data(double delay, int runCount, Action callback)
             {
-                this.createTime = ServerTime.now;
+                this.createTime = ServerTime.Now;
                 this.runTime = createTime.AddSeconds(delay);
                 this.delay = delay;
                 this.runCount = runCount;
@@ -35,9 +37,9 @@ namespace StarryNet.ServerModule
             }
         }
 
-        private static LinkedList<Data> schedules = new LinkedList<Data>();
+        private LinkedList<Data> schedules = new LinkedList<Data>();
 
-        public static int scheduleCount
+        public int scheduleCount
         {
             get
             {
@@ -47,22 +49,27 @@ namespace StarryNet.ServerModule
             }
         }
 
-        public static void AddSchedule(double delay)
-        {
-
-        }
-
-        public static void AddSchedule(double delay, Action callback, int runCount = 1)
+        public void AddSchedule(double delay, Action callback, int runCount = 1)
         {
             AddData(new Data(delay, runCount, callback));
         }
 
-        public static void AddLoopSchedule(double delay, Action callback)
+        public static void GlobalAddSchedule(double delay, Action callback, int runCount = 1)
+        {
+            globalSchedule.AddSchedule(delay, callback, runCount);
+        }
+
+        public void AddLoopSchedule(double delay, Action callback)
         {
             AddData(new Data(delay, -1, callback));
         }
 
-        private static void AddData(Data schedule)
+        public static void GlobalAddLoopSchedule(double delay, Action callback)
+        {
+            globalSchedule.AddLoopSchedule(delay, callback);
+        }
+
+        private void AddData(Data schedule)
         {
             if (schedules.IsEmpty())
             {
@@ -86,18 +93,23 @@ namespace StarryNet.ServerModule
             }
         }
 
-        public static void ClearAll()
+        public void ClearAll()
         {
             schedules.Clear();
         }
 
-        public static void Execute()
+        public static void GlobalClearAll()
+        {
+            globalSchedule.ClearAll();
+        }
+
+        public void Execute()
         {
             for (var current = schedules.First; current != null; current = schedules.First)
             {
                 try
                 {
-                    if (current.Value.runTime < ServerTime.now)
+                    if (current.Value.runTime < ServerTime.Now)
                     {
                         current.Value.callback();
                         PostExecuteSchedule();
@@ -113,7 +125,12 @@ namespace StarryNet.ServerModule
             }
         }
 
-        private static void PostExecuteSchedule()
+        public static void GlobalExecute()
+        {
+            globalSchedule.Execute();
+        }
+
+        private void PostExecuteSchedule()
         {
             Data data = schedules.First.Value;
             schedules.RemoveFirst();

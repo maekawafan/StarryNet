@@ -4,7 +4,7 @@ namespace StarryNet.StarryData
 {
     public abstract class StarryDataName
     {
-        public string name { get; protected set; }
+        public string name;
 
         public StarryDataName() { }
 

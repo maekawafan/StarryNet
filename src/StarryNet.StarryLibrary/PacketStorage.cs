@@ -8,37 +8,31 @@ namespace StarryNet.StarryLibrary
     {
         private ConcurrentQueue<T> decodingPackets = new ConcurrentQueue<T>();
         private ConcurrentQueue<T> packetBuffer = new ConcurrentQueue<T>();
-        public bool locked = false;
+        public static object locker = new object();
 
-        public async ValueTask AddPacket(T packet)
+        public void AddPacket(T packet)
         {
-            await WaitLock();
-            packetBuffer.Enqueue(packet);
-        }
-
-        private async ValueTask WaitLock()
-        {
-            do
+            lock (locker)
             {
-                if (!locked)
-                    return;
-                await Task.Delay(1);
-            } while (true);
+                packetBuffer.Enqueue(packet);
+            }
         }
 
         public IEnumerable<T> TakeAllPacket()
         {
             var temp = packetBuffer;
-            locked = true;
-            packetBuffer = decodingPackets;
-            decodingPackets = temp;
-            locked = false;
+            lock (locker)
+            {
+                packetBuffer = decodingPackets;
+                decodingPackets = temp;
+            }
 
             while (!decodingPackets.IsEmpty)
             {
                 T packet;
                 if (decodingPackets.TryDequeue(out packet))
                     yield return packet;
+
             }
         }
     }

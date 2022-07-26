@@ -115,6 +115,48 @@ namespace StarryNet.StarryLibrary
         }
 
         /// <summary>
+        /// 컬렉션에서 정렬 알고리즘의 최상단 값만 가져옵니다.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable">검사 대상 반복자</param>
+        /// <param name="comparison">정렬 비교자</param>
+        /// <returns></returns>
+        static public T Top<T>(this IEnumerable<T> enumerable, Comparison<T> comparison)
+        {
+            IEnumerator<T> enumerator = enumerable.GetEnumerator();
+            enumerator.MoveNext();
+            T result = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                if (comparison(result, enumerator.Current) >= 0)
+                    result = enumerator.Current;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 컬렉션에서 정렬 알고리즘의 최하단 값만 가져옵니다.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable">검사 대상 반복자</param>
+        /// <param name="comparison">정렬 비교자</param>
+        /// <returns></returns>
+        static public T Bottom<T>(this IEnumerable<T> enumerable, Comparison<T> comparison)
+        {
+            IEnumerator<T> enumerator = enumerable.GetEnumerator();
+            enumerator.MoveNext();
+            T result = enumerator.Current;
+            while (enumerator.MoveNext())
+            {
+                if (comparison(result, enumerator.Current) <= 0)
+                    result = enumerator.Current;
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// 리스트의 랜덤한 값 하나를 리턴합니다.
         /// </summary>
         /// <param name="list">랜덤한 값을 가져올 리스트</param>
@@ -134,6 +176,22 @@ namespace StarryNet.StarryLibrary
             if (array.IsEmpty())
                 return default(T);
             return array[Random.NextInt(array.Length - 1)];
+        }
+
+        static public void Add<T1, T2>(this Dictionary<T1, List<T2>> dictionary, T1 key, T2 value)
+        {
+            if (!dictionary.ContainsKey(key))
+                dictionary.Add(key, new List<T2>());
+            dictionary[key].Add(value);
+        }
+
+        static public void Remove<T1, T2>(this Dictionary<T1, List<T2>> dictionary, T1 key, T2 value)
+        {
+            if (!dictionary.ContainsKey(key))
+                return;
+            dictionary[key].Remove(value);
+            if (dictionary[key].Count == 0)
+                dictionary.Remove(key);
         }
     }
 }

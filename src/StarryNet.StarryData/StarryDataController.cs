@@ -359,6 +359,7 @@ namespace StarryNet.StarryData
                     // Table
                     foreach (object data in pair.Value.Values)
                     {
+                        StarryData starryData = data as StarryData;
                         foreach (var field in fields)
                         {
                             dynamic value = field.GetValue(data);
@@ -366,7 +367,7 @@ namespace StarryNet.StarryData
 
                             if (!valueType.IsArray)
                             {
-                                SaveBinary(writer, valueType, value);
+                                SaveBinary(writer, valueType, value, starryData);
                             }
                             else
                             {
@@ -380,7 +381,7 @@ namespace StarryNet.StarryData
 
                                 foreach (var atom in array)
                                 {
-                                    SaveBinary(writer, valueType.GetElementType(), atom);
+                                    SaveBinary(writer, valueType.GetElementType(), atom, starryData);
                                 }
                             }
                         }
@@ -391,7 +392,7 @@ namespace StarryNet.StarryData
 
             Log.Info("DataController", $"바이너리 크기 : {totalSize}");
 
-            void SaveBinary(BinaryWriter writer, Type type, dynamic value)
+            void SaveBinary(BinaryWriter writer, Type type, dynamic value, StarryData starryData)
             {
                 if (type.IsPrimitive || value is string)
                     writer.Write(value);
@@ -421,10 +422,13 @@ namespace StarryNet.StarryData
                 else if (value is StarryDataName dataName)
                 {
                     StarryData referenceData = type.GetMethod("Get").Invoke(dataName, null) as StarryData;
-                    writer.Write(referenceData.id);
+                    if (referenceData == null)
+                        writer.Write(0u);
+                    else
+                        writer.Write(referenceData.id);
                 }
                 else
-                    Log.Error("DataController", $"바이너리화에 실패한 타입 - {type.Name}");
+                    Log.Error("DataController", $"바이너리화에 실패한 타입 - {type.Name} ID[{starryData.id}]");
             }
         }
 
@@ -504,6 +508,57 @@ namespace StarryNet.StarryData
 
         private static object GetFieldData(Type fieldType, string value, bool verify)
         {
+            if (value == null)
+            {
+                if (fieldType == typeof(string))
+                    return "";
+                else if (fieldType == typeof(bool))
+                    return false;
+                else if (fieldType == typeof(byte))
+                    return 0;
+                else if (fieldType == typeof(sbyte))
+                    return 0;
+                else if (fieldType == typeof(short))
+                    return 0;
+                else if (fieldType == typeof(ushort))
+                    return 0;
+                else if (fieldType == typeof(int))
+                    return 0;
+                else if (fieldType == typeof(uint))
+                    return 0;
+                else if (fieldType == typeof(long))
+                    return 0;
+                else if (fieldType == typeof(ulong))
+                    return 0;
+                else if (fieldType == typeof(float))
+                    return 0;
+                else if (fieldType == typeof(double))
+                    return 0;
+                else if (fieldType == typeof(decimal))
+                    return 0;
+                else if (fieldType == typeof(BigInteger))
+                    return 0;
+                else if (fieldType == typeof(DateTime))
+                    return DateTime.MinValue;
+                else if (fieldType == typeof(Vector2))
+                    return Vector2.zero;
+                else if (fieldType == typeof(Vector3))
+                    return Vector3.zero;
+                else if (fieldType == typeof(Vector4))
+                    return Vector4.zero;
+                else if (fieldType == typeof(Vector2Int))
+                    return Vector2Int.zero;
+                else if (fieldType == typeof(Vector3Int))
+                    return Vector3Int.zero;
+                else if (fieldType == typeof(Color))
+                    return Color.black;
+                else if (fieldType.IsEnum)
+                    return null;
+                else if (fieldType.GetGenericTypeDefinition() == typeof(IStarryDataReference<>))
+                    return null;
+                return null;
+            }
+
             if (fieldType == typeof(string))
                 return value.ToString();
             else if (fieldType == typeof(bool))
@@ -596,6 +651,9 @@ namespace StarryNet.StarryData
                         result.b = Convert.ToInt32(token[2], 16) / 255.0f;
                     if (token.Length >= 4)
                         result.a = Convert.ToInt32(token[3], 16) / 255.0f;
+                    else
+                        result.a = 1.0f;
+                    return result;
                 }
             }
             else if (fieldType.IsEnum)
@@ -638,18 +696,17 @@ namespace StarryNet.StarryData
 
         private static void SetField(StarryData data, FieldInfo fieldInfo, object cellValue, bool verify = false)
         {
-            if (cellValue == null || cellValue.ToString().IsEmpty())
-                return;
-
             try
             {
                 if (!fieldInfo.FieldType.IsArray)
                 {
-                    fieldInfo.SetValue(data, GetFieldData(fieldInfo.FieldType, cellValue.ToString(), verify));
+                    fieldInfo.SetValue(data, GetFieldData(fieldInfo.FieldType, cellValue?.ToString(), verify));
                 }
                 else
                 {
                     string[] tokens = cellValue.ToString().Split(splitCharacter);
+                    if (tokens.Length == 0 || tokens[0].ToString() == string.Empty)
+                        return;
                     Array array = Array.CreateInstance(fieldInfo.FieldType.GetElementType(), tokens.Length);
                     for (int i = 0; i < tokens.Length; i++)
                         array.SetValue(GetFieldData(fieldInfo.FieldType.GetElementType(), tokens[i], verify), i);

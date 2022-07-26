@@ -50,6 +50,9 @@
             this.size = size;
         }
 
+        public static ByteUnit operator +(ByteUnit a, ByteUnit b) => new ByteUnit(a.size + b.size);
+        public static ByteUnit operator -(ByteUnit a, ByteUnit b) => new ByteUnit(a.size - b.size);
+
         public static ByteUnit Zero()
         {
             return new ByteUnit(0);

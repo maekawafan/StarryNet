@@ -4,7 +4,7 @@ namespace StarryNet.StarryData
 {
     public abstract class StarryDataID
     {
-        public uint id { get; protected set; }
+        public uint id;
 
         public StarryDataID() { }
 

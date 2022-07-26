@@ -17,7 +17,8 @@ namespace StarryNet.ServerModule
 
         public Action onConnect;
         public Action onDisconnect;
-        public Action<Packet> onData;
+        public Action<dynamic> onData;
+        public Action<dynamic> onFastData;
 
         private DateTime lastTryingConnectTime;
         private const float reconnectDelay = 3.0f;
@@ -38,13 +39,22 @@ namespace StarryNet.ServerModule
         {
             try
             {
-                Type type = PacketController.GetType(package.Key);
-                dynamic pks = MessagePack.MessagePackSerializer.Deserialize(type, package.Body);
-                await packetStorage.AddPacket(pks);
+                if (package.Key == 0xFFFF)
+                {
+                    SendPing();
+                    return;
+                }
+
+                var typeTuple = PacketController.GetTypeTuple(package.Key);
+                dynamic pks = MessagePack.MessagePackSerializer.Deserialize(typeTuple.type, package.Body);
+                if (typeTuple.isFast)
+                    onFastData.Invoke(pks);
+                else
+                    packetStorage.AddPacket(pks);
             }
             catch
             {
-                Log.Error("ClientModule", "패킷 디코드 실패");
+                Log.Error("ClientModule", $"패킷 디코드 실패 [Key:{package.Key}]");
             }
         }
 
@@ -109,6 +119,24 @@ namespace StarryNet.ServerModule
         public void Send(DataPackage package)
         {
             client.SendAsync(packageEncoder, package);
+        }
+
+        public async void SendPing()
+        {
+            if (!isConnected)
+                return;
+
+            try
+            {
+                DataPackage packetPackage = new DataPackage();
+                packetPackage.Key = 0xFFFF;
+                packetPackage.Body = new byte[1] { 0 };
+                await client.SendAsync(new DataEncoder(), packetPackage);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"핑 전송 실패 {e.Message}");
+            }
         }
     }
 

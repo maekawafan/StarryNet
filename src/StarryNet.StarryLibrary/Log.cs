@@ -9,6 +9,16 @@
             Log.logSystem = logSystem;
         }
 
+        public static void Clear()
+        {
+            Log.logSystem = null;
+        }
+
+        public static bool IsInitialized()
+        {
+            return Log.logSystem != null;
+        }
+
         public static void Write(string value)                  => logSystem.Write(value);
         public static void Write(string title, string value)    => logSystem.Write(title, value);
         public static void Write<T>(T value)                    => logSystem.Write(value);

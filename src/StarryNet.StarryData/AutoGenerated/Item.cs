@@ -6,15 +6,22 @@ using MessagePack;
 using StarryNet.StarryLibrary;
 
 using BigInteger = System.Numerics.BigInteger;
+using Random = StarryNet.StarryLibrary.Random;
 
 namespace StarryNet.StarryData
 {
-    public class ItemData : StarryData
+    public partial class ItemData : StarryData
     {
-        public readonly string description;
-        public readonly int upgrade;
-        public readonly int[] test;
-        public readonly Color mainColor;
+        public enum ItemType
+        {
+            ammunition,
+        };
+
+        public readonly string displayName;
+        public readonly string sprite;
+        public readonly ItemType itemType;
+        public readonly ulong iuid;
+        public readonly uint amount;
 
         public override void Regist()
         {
@@ -25,6 +32,12 @@ namespace StarryNet.StarryData
 
         public static ItemData Get(uint id)
         {
+            if (GetDataCount == 0)
+            {
+                Log.Error("Item", "데이터가 로드된 적 없는데 사용하려 합니다.");
+                return null;
+            }
+
             if (DataController.itemDataIDTable.TryGetValue(id, out var data))
                 return data;
             return null;
@@ -32,7 +45,28 @@ namespace StarryNet.StarryData
 
         public static ItemData Get(string name)
         {
+            if (GetDataCount == 0)
+            {
+                Log.Error("Item", "데이터가 로드된 적 없는데 사용하려 합니다.");
+                return null;
+            }
+
             if (DataController.itemDataNameTable.TryGetValue(name, out var data))
+                return data;
+            return null;
+        }
+
+        public static ItemData GetRandom()
+        {
+            if (GetDataCount == 0)
+            {
+                Log.Error("Item", "데이터가 로드된 적 없는데 사용하려 합니다.");
+                return null;
+            }
+
+            uint dataCount = (uint)GetDataCount;
+
+            if (DataController.itemDataIDTable.TryGetValue(Random.NextUint(1u, dataCount), out var data))
                 return data;
             return null;
         }
@@ -89,6 +123,8 @@ namespace StarryNet.StarryData
             }
             return result;
         }
+
+        public static int GetDataCount => DataController.itemDataIDTable.Count;
     }
 
     public partial class ItemDataID : StarryDataID<ItemData>
@@ -121,15 +157,17 @@ namespace StarryNet.StarryData
 
     public partial class ItemInstance : StarryInstance<ItemData>
     {
-        public string description { get { return data.description; } }
-        public int upgrade;
-        public int[] test { get { return data.test; } }
-        public Color mainColor { get { return data.mainColor; } }
+        public string displayName { get { return data.displayName; } }
+        public string sprite { get { return data.sprite; } }
+        public ItemData.ItemType itemType { get { return data.itemType; } }
+        public ulong iuid;
+        public uint amount;
 
         public ItemInstance(ItemData data)
         {
             this.data = data;
-            upgrade = data.upgrade;
+            iuid = data.iuid;
+            amount = data.amount;
         }
 
         static ItemInstance()
@@ -215,9 +253,10 @@ namespace StarryNet.StarryData
                 return;
             }
 
-            writer.WriteArrayHeader(2);
+            writer.WriteArrayHeader(3);
             writer.WriteUInt32(value.id);
-            writer.Write(value.upgrade);
+            writer.Write(value.iuid);
+            writer.Write(value.amount);
         }
 
         public ItemInstance Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)
@@ -232,7 +271,8 @@ namespace StarryNet.StarryData
             if (length == 0)
                 return null;
 
-            int __upgrade__ = default(int);
+            ulong __iuid__ = default(ulong);
+            uint __amount__ = default(uint);
 
             for (int i = 0; i < length; i++)
             {
@@ -243,7 +283,10 @@ namespace StarryNet.StarryData
                         __id__ = reader.ReadUInt32();
                         break;
                     case 1:
-                        reader.Read(out __upgrade__);
+                        reader.Read(out __iuid__);
+                        break;
+                    case 2:
+                        reader.Read(out __amount__);
                         break;
                     default:
                         reader.Skip();
@@ -252,7 +295,8 @@ namespace StarryNet.StarryData
             }
 
             ItemInstance result = new ItemInstance(__id__);
-            result.upgrade = __upgrade__;
+            result.iuid = __iuid__;
+            result.amount = __amount__;
 
             return result;
         }

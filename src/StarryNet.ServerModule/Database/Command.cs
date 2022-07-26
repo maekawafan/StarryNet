@@ -92,6 +92,8 @@ namespace StarryNet.ServerModule
                 else
                     command.Parameters.AddWithValue(values[i++].ToString(), values[i++]);
             }
+
+            command.Parameters.Add("_error", MySqlDbType.Byte).Direction = ParameterDirection.Output;
             return true;
         }
 
@@ -112,6 +114,8 @@ namespace StarryNet.ServerModule
                 else
                     command.Parameters.AddWithValue(values[i++].ToString(), values[i++]);
             }
+
+            command.Parameters.Add("_error", MySqlDbType.Byte).Direction = ParameterDirection.Output;
             return true;
         }
 

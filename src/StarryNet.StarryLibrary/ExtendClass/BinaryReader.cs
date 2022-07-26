@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace StarryNet.StarryLibrary
@@ -33,6 +35,21 @@ namespace StarryNet.StarryLibrary
         public static Color ReadColor(this BinaryReader reader)
         {
             return new Color(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+        }
+
+        public static Quaternion ReadQuaternion(this BinaryReader reader)
+        {
+            return new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+        }
+
+        public static List<T> ReadList<T>(this BinaryReader reader, Func<BinaryReader, T> readAction)
+        {
+            int count = reader.ReadInt32();
+
+            List<T> result = new List<T>(count);
+            for(int i = 0; i < count; i++)
+                result.Add(readAction(reader));
+            return result;
         }
     }
 }

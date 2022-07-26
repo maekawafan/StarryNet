@@ -62,14 +62,24 @@ namespace StarryNet.ServerModule
     {
         public int Encode(IBufferWriter<byte> writer, DataPackage pack)
         {
-            int size = pack.Body.Length;
+            int size = pack.Body?.Length ?? 0;
             byte[] key = BitConverter.GetBytes(pack.Key);
             byte[] length = BitConverter.GetBytes((ushort)size);
             Array.Reverse(key);
             Array.Reverse(length);
-            writer.Write(key);
-            writer.Write(length);
-            writer.Write(pack.Body);
+            try
+            {
+                lock (writer)
+                {
+                    writer.Write(key);
+                    writer.Write(length);
+                    writer.Write(pack.Body);
+                }
+            }
+            catch (Exception e)
+            {
+                return 0;
+            }
             return size;
         }
     }

@@ -1,42 +1,41 @@
-﻿using System;
+﻿using StarryNet.StarryLibrary;
+using System;
 
-namespace StarryNet.StarryLibrary
+public class ConsoleLog : ILogSystem
 {
-    public class ConsoleLog : ILogSystem
+    public static readonly object logLock = new object();
+    public static string LogTime
     {
-        public static readonly object logLock = new object();
-        public static string LogTime
+        get
         {
-            get
-            {
-                return ServerTime.Now.ToString("[hh:mm:ss]");
-            }
+            return ServerTime.Now.ToString("[hh:mm:ss]");
         }
+    }
 
-        public virtual void Write(string value)
-        {
+    public virtual void Write(string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
                 Console.WriteLine($"{LogTime} {value}");
             }
 #else
-            Console.WriteLine($"{LogTime} {value}");
+        Console.WriteLine($"{LogTime} {value}");
 #endif
-        }
-        public virtual void Write<T>(T value)
-        {
+    }
+    public virtual void Write<T>(T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
                 Console.WriteLine($"{LogTime} {value}");
             }
 #else
-            Console.WriteLine($"{LogTime} {value}");
+        Console.WriteLine($"{LogTime} {value}");
 #endif
-        }
-        public virtual void Write(string title, string value)
-        {
+    }
+    public virtual void Write(string title, string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -49,11 +48,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} ({title}){value}");
+        Console.WriteLine($"{LogTime} ({title}){value}");
 #endif
-        }
-        public virtual void Write<T>(string title, T value)
-        {
+    }
+    public virtual void Write<T>(string title, T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -66,11 +65,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} ({title}){value}");
+        Console.WriteLine($"{LogTime} ({title}){value}");
 #endif
-        }
-        public virtual void Error(string value)
-        {
+    }
+    public virtual void Error(string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -81,11 +80,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} Error - {value}");
+        Console.WriteLine($"{LogTime} Error - {value}");
 #endif
-        }
-        public virtual void Error<T>(T value)
-        {
+    }
+    public virtual void Error<T>(T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -96,11 +95,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} Error - {value}");
+        Console.WriteLine($"{LogTime} Error - {value}");
 #endif
-        }
-        public virtual void Error(string title, string value)
-        {
+    }
+    public virtual void Error(string title, string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -115,11 +114,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} ({title})Error - {value}");
+        Console.WriteLine($"{LogTime} ({title})Error - {value}");
 #endif
-        }
-        public virtual void Error<T>(string title, T value)
-        {
+    }
+    public virtual void Error<T>(string title, T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -134,43 +133,49 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} ({title})Error - {value}");
+        Console.WriteLine($"{LogTime} ({title})Error - {value}");
 #endif
-        }
-        public virtual void Info(string value)
-        {
+    }
+    public virtual void Info(string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{LogTime} Info - ");
-                Console.WriteLine(value);
-                Console.ResetColor();
-            }
-#else
-            Console.WriteLine($"{LogTime} Info - {value}");
-#endif
-        }
-        public virtual void Info<T>(T value)
-        {
-#if COLOR_LOG
-            lock (logLock)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{LogTime} Info - ");
-                Console.WriteLine(value);
-                Console.ResetColor();
-            }
-#else
-            Console.WriteLine($"{LogTime} Info - {value}");
-#endif
-        }
-        public virtual void Info(string title, string value)
-        {
-#if COLOR_LOG
-            lock (logLock)
-            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(LogTime);
                 Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($" Info - ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(value);
+                Console.ResetColor();
+            }
+#else
+        Console.WriteLine($"{LogTime} Info - {value}");
+#endif
+    }
+    public virtual void Info<T>(T value)
+    {
+#if COLOR_LOG
+            lock (logLock)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write(LogTime);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($" Info - ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(value);
+                Console.ResetColor();
+            }
+#else
+        Console.WriteLine($"{LogTime} Info - {value}");
+#endif
+    }
+    public virtual void Info(string title, string value)
+    {
+#if COLOR_LOG
+            lock (logLock)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(LogTime);
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write($"({title}) ");
@@ -181,15 +186,15 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime}({title})Info - {value}");
+        Console.WriteLine($"{LogTime}({title})Info - {value}");
 #endif
-        }
-        public virtual void Info<T>(string title, T value)
-        {
+    }
+    public virtual void Info<T>(string title, T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(LogTime);
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write($"({title}) ");
@@ -200,11 +205,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime}({title})Info - {value}");
+        Console.WriteLine($"{LogTime}({title})Info - {value}");
 #endif
-        }
-        public virtual void Debug(string value)
-        {
+    }
+    public virtual void Debug(string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -215,11 +220,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} Debug - {value}");
+        Console.WriteLine($"{LogTime} Debug - {value}");
 #endif
-        }
-        public virtual void Debug<T>(T value)
-        {
+    }
+    public virtual void Debug<T>(T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -230,11 +235,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} Debug - {value}");
+        Console.WriteLine($"{LogTime} Debug - {value}");
 #endif
-        }
-        public virtual void Debug(string title, string value)
-        {
+    }
+    public virtual void Debug(string title, string value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -249,11 +254,11 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} {title}Debug - {value}");
+        Console.WriteLine($"{LogTime} {title}Debug - {value}");
 #endif
-        }
-        public virtual void Debug<T>(string title, T value)
-        {
+    }
+    public virtual void Debug<T>(string title, T value)
+    {
 #if COLOR_LOG
             lock (logLock)
             {
@@ -268,16 +273,15 @@ namespace StarryNet.StarryLibrary
                 Console.ResetColor();
             }
 #else
-            Console.WriteLine($"{LogTime} {title}Debug - {value}");
+        Console.WriteLine($"{LogTime} {title}Debug - {value}");
 #endif
-        }
+    }
 
-        public void ClearLine()
+    public void ClearLine()
+    {
+        lock (logLock)
         {
-            lock (logLock)
-            {
-                Console.Write(new string(' ', Console.BufferWidth));
-            }
+            Console.Write(new string(' ', Console.BufferWidth));
         }
     }
 }

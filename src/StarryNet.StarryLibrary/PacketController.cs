@@ -6,9 +6,9 @@ namespace StarryNet.StarryLibrary
 {
     public static class PacketController
     {
-        public static Dictionary<ushort, Type> packetDictionary = new Dictionary<ushort, Type>();
+        public static Dictionary<ushort, (Type type, bool isFast)> packetDictionary = new Dictionary<ushort, (Type, bool)>();
         public static Dictionary<Type, ushort> typeToPacketIndex = new Dictionary<Type, ushort>();
-        public static Dictionary<string, Type> stringToPacket = new Dictionary<string, Type>();
+        public static Dictionary<string, (Type type, bool isFast)> stringToPacket = new Dictionary<string, (Type, bool)>();
 
         public static void Initialize(params Assembly[] assemblies)
         {
@@ -19,9 +19,10 @@ namespace StarryNet.StarryLibrary
             ushort index = 1;
             foreach (Type type in packetType)
             {
-                packetDictionary.Add(index, type);
+                bool isFast = type.IsSubclassOf(typeof(FastPacket));
+                packetDictionary.Add(index, (type, isFast));
                 typeToPacketIndex.Add(type, index);
-                stringToPacket.Add(type.Name, type);
+                stringToPacket.Add(type.FullName, (type, isFast));
                 index++;
             }
         }
@@ -35,9 +36,10 @@ namespace StarryNet.StarryLibrary
             ushort index = 1;
             foreach (Type type in packetType)
             {
-                packetDictionary.Add(index, type);
+                bool isFast = type.IsSubclassOf(typeof(FastPacket));
+                packetDictionary.Add(index, (type, isFast));
                 typeToPacketIndex.Add(type, index);
-                stringToPacket.Add(type.Name, type);
+                stringToPacket.Add(type.FullName, (type, isFast));
                 index++;
             }
         }
@@ -65,15 +67,22 @@ namespace StarryNet.StarryLibrary
 
         public static Type GetType(ushort index)
         {
-            if (packetDictionary.TryGetValue(index, out var type))
-                return type;
+            if (packetDictionary.TryGetValue(index, out var typeTuple))
+                return typeTuple.type;
             return null;
+        }
+
+        public static (Type type, bool isFast) GetTypeTuple(ushort index)
+        {
+            if (packetDictionary.TryGetValue(index, out var typeTuple))
+                return typeTuple;
+            return (null, false);
         }
 
         public static Type GetType(string typeName)
         {
-            if (stringToPacket.TryGetValue(typeName, out var type))
-                return type;
+            if (stringToPacket.TryGetValue(typeName, out var typeTuple))
+                return typeTuple.type; ;
             return null;
         }
     }

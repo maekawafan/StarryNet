@@ -51,9 +51,9 @@ namespace StarryNet.ServerModule
             }
 
             if (connection.State == ConnectionState.Open)
-                Log.Info($"DB[{dbName}] Connect Success!");
+                Log.Info("DB", $"[{dbName}] Connect Success!");
             else
-                Log.Error($"DB[{dbName}] Connect Fail!");
+                Log.Error("DB", $"[{dbName}] Connect Fail!");
             ConnectionClose(connection);
         }
 
@@ -118,13 +118,19 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 command.ExecuteNonQuery();
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
             catch (Exception e)
             {
-                Log.Error($"프로시저[{procedureName}] 실행 실패 - {e.Message}");
+                Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
             }
             finally
             {
@@ -142,6 +148,8 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 using (MySqlDataReader reader = command.ExecuteReader())
@@ -151,10 +159,15 @@ namespace StarryNet.ServerModule
                     else
                         successCallback(null);
                 }
+
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
             catch (Exception e)
             {
-                Log.Error($"프로시저[{procedureName}] 실행 실패 - {e.Message}");
+                Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
             }
             finally
             {
@@ -172,12 +185,19 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 command.ExecuteNonQuery();
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
                 failCallback();
             }
             finally
@@ -196,6 +216,8 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 using (MySqlDataReader reader = command.ExecuteReader())
@@ -205,10 +227,14 @@ namespace StarryNet.ServerModule
                     else
                         successCallback(null);
                 }
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
             catch (Exception e)
             {
                 Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
                 failCallback();
             }
             finally
@@ -227,13 +253,19 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 await command.ExecuteNonQueryAsync();
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
             catch (Exception e)
             {
-                Log.Error($"프로시저[{procedureName}] 실행 실패 - {e.Message}");
+                Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
             }
             finally
             {
@@ -251,6 +283,8 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 using (MySqlDataReader reader = await command.ExecuteReaderAsync())
@@ -260,10 +294,14 @@ namespace StarryNet.ServerModule
                     else
                         successCallback(null);
                 }
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
             catch (Exception e)
             {
-                Log.Error($"프로시저[{procedureName}] 실행 실패 - {e.Message}");
+                Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
             }
             finally
             {
@@ -281,12 +319,19 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 await command.ExecuteNonQueryAsync();
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
                 failCallback();
             }
             finally
@@ -305,6 +350,8 @@ namespace StarryNet.ServerModule
                 return;
             }
 
+            var errorParam = command.Parameters["_error"];
+
             try
             {
                 using (MySqlDataReader reader = await command.ExecuteReaderAsync())
@@ -314,10 +361,14 @@ namespace StarryNet.ServerModule
                     else
                         successCallback(null);
                 }
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    throw new Exception($"Procedure Error {command.Parameters["_error"].Value}");
             }
             catch (Exception e)
             {
                 Log.Error(e.Message);
+                if (errorParam.Value != null && errorParam.Value != DBNull.Value && (byte)errorParam.Value != 0)
+                    Log.Error($"프로시저[{procedureName}] 실행 실패 - Error Out [{command.Parameters["_error"].Value}]");
                 failCallback();
             }
             finally

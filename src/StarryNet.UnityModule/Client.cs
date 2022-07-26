@@ -16,10 +16,11 @@ namespace UnityClientModule
         public ushort targetPort;
         public EasyClient<DataPackage> client;
         private Action<dynamic> onData;
+        private Action<dynamic> onFastData;
         public Action onConnect;
         public Action onDisconnect;
         public Action<string> onError;
-        private bool isTryingConnect;
+        public bool isTryingConnect { get; private set; }
         public bool IsConnected
         {
             get
@@ -30,17 +31,19 @@ namespace UnityClientModule
             }
         }
 
+        public bool IsNeedConnect => !isTryingConnect && !IsConnected;
         private DateTime lastTryingConnectTime;
         private const float reconnectDelay = 3.0f;
 
         private PacketStorage<dynamic> packetStorage = new PacketStorage<dynamic>();
 
-        public Client(string name, string targetIP, ushort targetPort, Action<dynamic> onData)
+        public Client(string name, string targetIP, ushort targetPort, Action<dynamic> onData, Action<dynamic> onFastData)
         {
             this.name = name;
             this.targetIP = targetIP;
             this.targetPort = targetPort;
             this.onData = onData;
+            this.onFastData = onFastData;
 
             client = new EasyClient<DataPackage>();
             client.Initialize(new DataFilter());
@@ -88,10 +91,18 @@ namespace UnityClientModule
 
         private void OnData(object sender, PackageEventArgs<DataPackage> e)
         {
-            Type type = PacketController.GetType(e.Package.Key);
+            if (e.Package.Key == 0xFFFF)
+            {
+                SendPing();
+                return;
+            }
 
-            dynamic pks = MessagePack.MessagePackSerializer.Deserialize(type, e.Package.Body);
-            packetStorage.AddPacket(pks);
+            var typeTuple = PacketController.GetTypeTuple(e.Package.Key);
+            dynamic pks = MessagePack.MessagePackSerializer.Deserialize(typeTuple.type, e.Package.Body);
+            if (typeTuple.isFast)
+                onFastData.Invoke(pks);
+            else
+                packetStorage.AddPacket(pks);
         }
 
         private void OnError(object sender, ErrorEventArgs e)
@@ -102,24 +113,63 @@ namespace UnityClientModule
 
         public void SendPacket<T>(T packet) where T : Packet
         {
-            ushort index = PacketController.GetIndex(typeof(T));
-            byte[] body = MessagePack.MessagePackSerializer.Serialize(packet);
-            byte[] buffer = new byte[4 + body.Length];
-            Array.Copy(BitConverter.GetBytes(index).Reverse(), 0, buffer, 0, 2);
-            Array.Copy(BitConverter.GetBytes((ushort)body.Length).Reverse(), 0, buffer, 2, 2);
-            Array.Copy(body, 0, buffer, 4, body.Length);
-            client.Send(buffer);
+            if (!client.IsConnected)
+                return;
+            byte[] buffer = null;
+            ushort index = 0;
+            try
+            {
+                index = PacketController.GetIndex(typeof(T));
+                byte[] body = MessagePack.MessagePackSerializer.Serialize(packet);
+                //if (index >= body.Length)
+                //    return;
+                buffer = new byte[4 + body.Length];
+                Array.Copy(BitConverter.GetBytes(index).Reverse(), 0, buffer, 0, 2);
+                Array.Copy(BitConverter.GetBytes((ushort) body.Length).Reverse(), 0, buffer, 2, 2);
+                Array.Copy(body, 0, buffer, 4, body.Length);
+                if (client.IsConnected)
+                    client.Send(buffer);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"패킷 전송 실패 : [{nameof(T)}] {e.Message}\nIndex : [{index}]\n");
+                Log.Error($"Resolver : {(MessagePack.MessagePackSerializer.DefaultOptions.Resolver.GetFormatter<T>() == null ? "Null" : "Not Null")}");
+                if (buffer != null)
+                    Log.Error($"Byte : [{buffer.ToString()}]");
+            }
         }
 
         public void DecodePacket()
         {
             foreach (dynamic packet in packetStorage.TakeAllPacket())
+            {
                 onData?.Invoke(packet);
+            }
         }
 
         public void SetDefault()
         {
             defaultModule = this;
+        }
+
+        public void SendPing()
+        {
+            if (!IsConnected)
+                return;
+
+            try
+            {
+                ushort length = 0;
+                byte[] buffer = new byte[4];
+                Array.Copy(BitConverter.GetBytes(0xFFFF), 0, buffer, 0, 2);
+                Array.Copy(BitConverter.GetBytes(length), 0, buffer, 2, 2);
+                if (client.IsConnected)
+                    client.Send(buffer);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"핑 전송 실패 {e.Message}");
+            }
         }
     }
 

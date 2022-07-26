@@ -17,7 +17,7 @@ namespace StarryNet.StarryDataGenerator
             {
                 if (path.Contains("~$"))
                     continue;
-
+                Log.Info("파싱", path);
                 FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using (stream)
                 {
@@ -32,6 +32,7 @@ namespace StarryNet.StarryDataGenerator
         {
             foreach (DataTable table in dataSet.Tables)
             {
+                Log.Info("데이터", table.TableName);
                 ParseWorksheet(table);
             }
         }

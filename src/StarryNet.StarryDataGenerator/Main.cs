@@ -1,5 +1,4 @@
 ﻿using StarryNet.StarryLibrary;
-
 using System;
 
 namespace StarryNet.StarryDataGenerator
@@ -14,9 +13,11 @@ namespace StarryNet.StarryDataGenerator
             string exportPath = args[1];
             string templatePath = args[2];
 
+            Log.Info("파싱 시작");
             ParseDatas(dataFilePath);
+            Log.Info("코드 생성 시작");
             CodeGenerate(exportPath, templatePath);
-            Console.WriteLine("파싱 완료");
+            Log.Info("작업 완료");
         }
     }
 }

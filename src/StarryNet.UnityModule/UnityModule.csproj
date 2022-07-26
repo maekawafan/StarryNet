@@ -3,13 +3,23 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Platforms>x64</Platforms>
+    <BaseIntermediateOutputPath>../../obj/</BaseIntermediateOutputPath>
+    <BaseOutputPath>../../../unitybin/</BaseOutputPath>
+    <PackageId>$(AssemblyName)</PackageId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <DocumentationFile>A:\Repos\StarryNet\src\StarryNet.UnityModule\UnityModule.xml</DocumentationFile>
-    <OutputPath>../../bin/</OutputPath>
+    <DocumentationFile></DocumentationFile>
+    <OutputPath>../../../unitybin/</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <NoWarn>1591;1701;1702</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DocumentationFile></DocumentationFile>
+    <OutputPath>../../../unitybin/</OutputPath>
     <NoWarn>1591;1701;1702</NoWarn>
   </PropertyGroup>
 
@@ -25,7 +35,12 @@
   <ItemGroup>
     <Reference Include="UnityEngine">
       <HintPath>..\..\lib\UnityEngine.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
     </Reference>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;..\..\..\unitybin\*&quot; &quot;$..\..\..\..\..\Client\Assets\Plugins\*&quot; /s /h /y /exclude:$(ProjectDir)exclude.txt" />
+  </Target>
 
 </Project>

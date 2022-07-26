@@ -1,9 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <Platforms>x64</Platforms>
+    <BaseIntermediateOutputPath>../../obj/</BaseIntermediateOutputPath>
+    <BaseOutputPath>../../bin/</BaseOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -12,15 +15,9 @@
     <DocumentationFile>../../bin/\CSharpLibrary.xml</DocumentationFile>
     <NoWarn>1591;1701;1702;</NoWarn>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutputPath>../../bin/</OutputPath>
-    <DocumentationFile>../../bin/\CSharpLibrary.xml</DocumentationFile>
-    <NoWarn>1591;1701;1702;</NoWarn>
-  </PropertyGroup>
-
+  
   <ItemGroup>
-    <PackageReference Include="MessagePack" Version="2.2.85" />
+    <PackageReference Include="MessagePack" Version="2.3.85" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 

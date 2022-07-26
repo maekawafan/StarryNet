@@ -6,10 +6,11 @@ using MessagePack;
 using StarryNet.StarryLibrary;
 
 using BigInteger = System.Numerics.BigInteger;
+using Random = StarryNet.StarryLibrary.Random;
 
 namespace StarryNet.StarryData
 {
-    public class [DataName]Data : StarryData
+    public partial class [DataName]Data : StarryData
     {
 	    [LocalEnums]
 	    [Values]
@@ -23,6 +24,12 @@ namespace StarryNet.StarryData
 
         public static [DataName]Data Get(uint id)
         {
+            if (GetDataCount == 0)
+            {
+                Log.Error("[DataName]", "데이터가 로드된 적 없는데 사용하려 합니다.");
+                return null;
+            }
+
             if (DataController.[LowerDataName]DataIDTable.TryGetValue(id, out var data))
                 return data;
             return null;
@@ -30,7 +37,28 @@ namespace StarryNet.StarryData
 
         public static [DataName]Data Get(string name)
         {
+            if (GetDataCount == 0)
+            {
+                Log.Error("[DataName]", "데이터가 로드된 적 없는데 사용하려 합니다.");
+                return null;
+            }
+
             if (DataController.[LowerDataName]DataNameTable.TryGetValue(name, out var data))
+                return data;
+            return null;
+        }
+
+        public static [DataName]Data GetRandom()
+        {
+            if (GetDataCount == 0)
+            {
+                Log.Error("[DataName]", "데이터가 로드된 적 없는데 사용하려 합니다.");
+                return null;
+            }
+
+            uint dataCount = (uint)GetDataCount;
+
+            if (DataController.[LowerDataName]DataIDTable.TryGetValue(Random.NextUint(1u, dataCount), out var data))
                 return data;
             return null;
         }
@@ -87,6 +115,8 @@ namespace StarryNet.StarryData
             }
             return result;
         }
+
+        public static int GetDataCount => DataController.[LowerDataName]DataIDTable.Count;
     }
 
     public partial class [DataName]DataID : StarryDataID<[DataName]Data>

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using StarryLibrary;
+using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace StarryNet.StarryLibrary
@@ -148,6 +150,44 @@ namespace StarryNet.StarryLibrary
             for (int i = 0; i < text.Length; i += count)
                 result[index++] = text.Substring(i, count);
             return result;
+        }
+
+        public static string HexXOR(this string a, string b)
+        {
+            string value = a.Length > b.Length ? a : b;
+            string key = a.Length > b.Length ? b : a;
+
+            if (key.Length == 0)
+                key = "0";
+
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < value.Length; i++)
+            {
+                int valueInt = Convert.ToInt32(value[i].ToString(), 16);
+                int keyInt = Convert.ToInt32(key[i % key.Length].ToString(), 16);
+                stringBuilder.Append((valueInt ^ keyInt).ToString("X"));
+            }
+            return stringBuilder.ToString();
+        }
+
+        public static string GetIP(this string address)
+        {
+            return address.Split(':')[0];
+        }
+
+        public static ushort GetPort(this string address)
+        {
+            return ushort.Parse(address.Split(':')[1]);
+        }
+
+        public static string GetIP(this EndPoint endPoint)
+        {
+            return endPoint.ToString().Split(':')[0];
+        }
+
+        public static ushort GetPort(this EndPoint endPoint)
+        {
+            return ushort.Parse(endPoint.ToString().Split(':')[1]);
         }
     }
 }
